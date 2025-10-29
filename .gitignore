@@ -360,5 +360,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/.idea/.idea.Musatec/.idea/codeStyles
+/.idea/*
 /MusaTec.Ui.Angular/.vscode
