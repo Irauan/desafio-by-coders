@@ -1,6 +1,6 @@
 ﻿namespace DesafioByCoders.Api.Features.Transactions;
 
-public static class TransactionTypeMetadata
+internal static class TransactionTypeMetadata
 {
     public static bool IsEntry(this TransactionType transactionType)
     {

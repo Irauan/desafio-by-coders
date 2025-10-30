@@ -1,27 +1,40 @@
-var builder = WebApplication.CreateBuilder(args);
+using System.Runtime.CompilerServices;
+using DesafioByCoders.ServiceDefaults;
 
-builder.AddServiceDefaults();
+[assembly: InternalsVisibleTo("DesafioByCoders.Api.Tests.Units")]
 
-// Add services to the container.
+namespace DesafioByCoders.Api;
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-var app = builder.Build();
-
-app.MapDefaultEndpoints();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+internal class Program
 {
-    app.MapOpenApi();
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.AddServiceDefaults();
+
+        // Add services to the container.
+
+        builder.Services.AddControllers();
+        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        builder.Services.AddOpenApi();
+
+        var app = builder.Build();
+
+        app.MapDefaultEndpoints();
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+        }
+
+        app.UseHttpsRedirection();
+
+        app.UseAuthorization();
+
+        app.MapControllers();
+
+        app.Run();
+    }
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();

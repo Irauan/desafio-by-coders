@@ -1,6 +1,6 @@
 ﻿namespace DesafioByCoders.Api.Features;
 
-public sealed class Store
+internal sealed class Store
 {
     public int Id { get; private set; }
     public string Name { get; private set; } = null!;

@@ -3,7 +3,7 @@ using DesafioByCoders.Api.Messages;
 
 namespace DesafioByCoders.Api.Features.Transactions;
 
-public sealed class CnabRecord
+internal sealed class CnabRecord
 {
     public TransactionType Type { get; }
     public DateTime OccurredAtLocal { get; }

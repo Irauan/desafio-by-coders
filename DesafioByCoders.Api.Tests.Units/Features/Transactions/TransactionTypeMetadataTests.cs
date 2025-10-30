@@ -33,7 +33,7 @@ public class TransactionTypeMetadataTests
     [InlineData(TransactionType.TedReceipt, 1)]
     [InlineData(TransactionType.DocReceipt, 1)]
     [InlineData(TransactionType.Rent, -1)]
-    public void Sign_ValidaTransactionTypes_ShouldReturnExpectedValue(TransactionType type, int expectedSign)
+    internal void Sign_ValidaTransactionTypes_ShouldReturnExpectedValue(TransactionType type, int expectedSign)
     {
         // Act
         var sign = type.Sign();

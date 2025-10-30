@@ -4,7 +4,7 @@ using DesafioByCoders.Api.Features.Transactions;
 
 namespace DesafioByCoders.Api.Features;
 
-public sealed class Transaction
+internal sealed class Transaction
 {
     public long Id { get; private set; }
     public int StoreId { get; private set; }
