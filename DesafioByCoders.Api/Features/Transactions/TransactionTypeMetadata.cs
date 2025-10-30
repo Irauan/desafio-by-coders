@@ -1,4 +1,4 @@
-﻿namespace DesafioByCoders.Api.Transactions;
+﻿namespace DesafioByCoders.Api.Features.Transactions;
 
 public static class TransactionTypeMetadata
 {

@@ -1,6 +1,6 @@
-﻿using DesafioByCoders.Api.Transactions;
+﻿using DesafioByCoders.Api.Features.Transactions;
 
-namespace DesafioByCoders.Api.Tests.Units.Transactions;
+namespace DesafioByCoders.Api.Tests.Units.Features.Transactions;
 
 public class TransactionTypeMetadataTests
 {

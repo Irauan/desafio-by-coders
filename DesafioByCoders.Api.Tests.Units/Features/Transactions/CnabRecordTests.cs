@@ -1,7 +1,7 @@
-﻿using DesafioByCoders.Api.Messages;
-using DesafioByCoders.Api.Transactions;
+﻿using DesafioByCoders.Api.Features.Transactions;
+using DesafioByCoders.Api.Messages;
 
-namespace DesafioByCoders.Api.Tests.Units.Transactions;
+namespace DesafioByCoders.Api.Tests.Units.Features.Transactions;
 
 public class CnabRecordTests
 {
