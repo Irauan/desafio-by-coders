@@ -2,7 +2,6 @@
 
 public enum TransactionType
 {
-    Unknown = 0,
     Debit = 1,
     Boleto = 2,
     Financing = 3,
