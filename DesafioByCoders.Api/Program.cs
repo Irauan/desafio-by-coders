@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using DesafioByCoders.Api.Features.Transactions;
+using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 [assembly: InternalsVisibleTo("DesafioByCoders.Api.Tests.Units")]
@@ -54,7 +55,9 @@ internal class Program
         builder.Services.AddControllers();
         
         builder.Services.AddOpenApi();
-
+        
+        builder.Services.AddHostedService<ApplyMigrations>();
+        
         var app = builder.Build();
 
         app.MapDefaultEndpoints();
