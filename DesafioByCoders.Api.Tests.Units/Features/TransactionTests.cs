@@ -8,17 +8,17 @@ namespace DesafioByCoders.Api.Tests.Units.Features;
 public class TransactionTests
 {
     [Fact]
-    public void Transaction_Create_ComputesSignedAmountUtcAndHash_ForEntryType()
+    public void Transaction_Create_ComputesSignedAmountAndHash_ForEntryType_WithoutUtcConversion()
     {
         var storeId = 42;
         var type = TransactionType.Debit;
         var amount = 150.75m;
-        var occurredAtLocal = new DateTime(2024, 10, 5, 8, 15, 0);
+        var occurredAtUtc = new DateTime(2024, 10, 5, 8, 15, 0, DateTimeKind.Utc);
         var cpf = "98765432100";
         var card = "999988887777";
         var rawLine = "sample raw line";
 
-        var trx = Transaction.Create(storeId, type, amount, occurredAtLocal, cpf, card, rawLine);
+        var trx = Transaction.Create(storeId, type, amount, occurredAtUtc, cpf, card, rawLine);
 
         Assert.Equal(storeId, trx.StoreId);
         Assert.Null(trx.Store);
@@ -27,7 +27,7 @@ public class TransactionTests
         Assert.Equal(amount, trx.SignedAmount);
         Assert.Equal(cpf, trx.Cpf);
         Assert.Equal(card, trx.Card);
-        Assert.Equal(new DateTime(2024, 10, 5, 11, 15, 0, DateTimeKind.Utc), trx.OccurredAtUtc);
+        Assert.Equal(occurredAtUtc, trx.OccurredAtUtc);
 
         using var sha = SHA256.Create();
 
@@ -42,7 +42,7 @@ public class TransactionTests
             7,
             TransactionType.Boleto,
             200.00m,
-            new DateTime(2023, 1, 10, 0, 0, 0),
+            new DateTime(2023, 1, 10, 0, 0, 0, DateTimeKind.Utc),
             "11122233344",
             "444433332222",
             "line");
@@ -57,7 +57,7 @@ public class TransactionTests
             9,
             TransactionType.Credit,
             0m,
-            new DateTime(2022, 6, 15, 14, 0, 0),
+            new DateTime(2022, 6, 15, 14, 0, 0, DateTimeKind.Utc),
             "55566677788",
             "111122223333",
             "raw");
@@ -66,20 +66,20 @@ public class TransactionTests
     }
 
     [Fact]
-    public void Transaction_Create_ConvertsUtcMinus3CrossingDayBoundary()
+    public void Transaction_Create_PreservesUtcDateTime()
     {
-        var occurredAtLocal = new DateTime(2023, 2, 1, 22, 30, 0);
+        var occurredAtUtc = new DateTime(2023, 2, 1, 22, 30, 0, DateTimeKind.Utc);
 
         var trx = Transaction.Create(
             1,
             TransactionType.Credit,
             1.00m,
-            occurredAtLocal,
+            occurredAtUtc,
             "00000000000",
             "000000000000",
             "another line");
 
-        Assert.Equal(new DateTime(2023, 2, 2, 1, 30, 0, DateTimeKind.Utc), trx.OccurredAtUtc);
+        Assert.Equal(occurredAtUtc, trx.OccurredAtUtc);
     }
 
     [Fact]
@@ -87,8 +87,8 @@ public class TransactionTests
     {
         var raw = "same raw";
 
-        var a = Transaction.Create(1, TransactionType.Credit, 10m, new DateTime(2024, 1, 1, 0, 0, 0), "1", "2", raw);
-        var b = Transaction.Create(2, TransactionType.Debit, 20m, new DateTime(2024, 1, 2, 0, 0, 0), "3", "4", raw);
+        var a = Transaction.Create(1, TransactionType.Credit, 10m, new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc), "1", "2", raw);
+        var b = Transaction.Create(2, TransactionType.Debit, 20m, new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc), "3", "4", raw);
 
         Assert.Equal(a.RawLineHash, b.RawLineHash);
     }

@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using DesafioByCoders.ServiceDefaults;
 
 [assembly: InternalsVisibleTo("DesafioByCoders.Api.Tests.Units")]
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 namespace DesafioByCoders.Api;
 

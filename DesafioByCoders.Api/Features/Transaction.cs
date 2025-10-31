@@ -6,17 +6,6 @@ namespace DesafioByCoders.Api.Features;
 
 internal sealed class Transaction
 {
-    public long Id { get; private set; }
-    public int StoreId { get; private set; }
-    public Store Store { get; private set; } = null!;
-    public TransactionType Type { get; private set; }
-    public decimal Amount { get; private set; }
-    public decimal SignedAmount { get; private set; }
-    public DateTime OccurredAtUtc { get; private set; }
-    public string Cpf { get; private set; } = null!;
-    public string Card { get; private set; } = null!;
-    public string RawLineHash { get; private set; } = null!;
-
     private Transaction()
     {
     }
@@ -42,27 +31,29 @@ internal sealed class Transaction
         Card = card;
         RawLineHash = rawLineHash;
     }
+    
+    public long Id { get; private set; }
+    public int StoreId { get; private set; }
+    public Store Store { get; private set; } = null!;
+    public TransactionType Type { get; private set; }
+    public decimal Amount { get; private set; }
+    public decimal SignedAmount { get; private set; }
+    public DateTime OccurredAtUtc { get; private set; }
+    public string Cpf { get; private set; } = null!;
+    public string Card { get; private set; } = null!;
+    public string RawLineHash { get; private set; } = null!;
 
     public static Transaction Create(
         int storeId,
         TransactionType type,
         decimal amount,
-        DateTime occurredAtLocal,
+        DateTime occurredAtUtc,
         string cpf,
         string card,
         string rawLine
     )
     {
         var signedAmount = amount * type.Sign();
-
-        var localZone = TimeZoneInfo.CreateCustomTimeZone(
-            "UTC-3",
-            TimeSpan.FromHours(-3),
-            "UTC-3",
-            "UTC-3"
-        );
-
-        var occurredAtUtc = TimeZoneInfo.ConvertTimeToUtc(occurredAtLocal, localZone);
 
         using var sha = SHA256.Create();
 
@@ -79,5 +70,10 @@ internal sealed class Transaction
             card,
             rawLineHash
         );
+    }
+    
+    public void SetStore(Store store)
+    {
+        Store = store;
     }
 }

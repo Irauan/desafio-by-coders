@@ -23,6 +23,6 @@ internal sealed class Store
 
     public override string ToString()
     {
-        return Name.ToLowerInvariant() + " - " + Owner.ToLowerInvariant();
+        return Name.ToLowerInvariant();
     }
 }

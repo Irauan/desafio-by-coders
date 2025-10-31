@@ -14,11 +14,11 @@ public class StoreTests
     }
 
     [Fact]
-    public void Store_ToString_ReturnsLowercaseNameAndOwnerSeparatedByDash()
+    public void Store_ToString_ReturnsLowercaseName()
     {
         var store = Store.Create("My STORE", "John DOE");
 
-        Assert.Equal("my store - john doe", store.ToString());
+        Assert.Equal("my store", store.ToString());
     }
 
     [Fact]
@@ -26,16 +26,16 @@ public class StoreTests
     {
         var store = Store.Create("PADARIA DO ZÉ", "JOSÉ DA SILVA");
 
-        Assert.Equal("padaria do zé - josé da silva", store.ToString());
+        Assert.Equal("padaria do zé", store.ToString());
     }
 
     [Fact]
-    public void Store_Create_WithEmptyStrings_ProducesEmptyPropertiesAndToStringWithDash()
+    public void Store_Create_WithEmptyStrings_ProducesEmptyPropertiesAndToStringEmpty()
     {
         var store = Store.Create("", "");
 
         Assert.Equal("", store.Name);
         Assert.Equal("", store.Owner);
-        Assert.Equal(" - ", store.ToString());
+        Assert.Equal("", store.ToString());
     }
 }
