@@ -7,6 +7,7 @@ internal static class TransactionSliceBuilder
     internal static IServiceCollection AddTransactionSlice(this IServiceCollection services, string connectionString)
     {
         services.AddScoped<IStoreRepository, StoreRepository>()
+                .AddScoped<ITransactionRepository, TransactionRepository>()
                 .AddDbContext<TransactionDbContext>(options => options.UseNpgsql(connectionString));
 
         return services;
