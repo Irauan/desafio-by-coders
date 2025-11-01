@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 
 namespace DesafioByCoders.Api;
 
@@ -9,26 +10,35 @@ internal sealed class ApplyMigrations : IHostedService
 
     private readonly ILogger<ApplyMigrations> _logger;
 
-    public ApplyMigrations(IServiceProvider serviceProvider, ILogger<ApplyMigrations> logger)
+    private readonly IHostEnvironment _hostEnvironment;
+
+    public ApplyMigrations(
+        IServiceProvider serviceProvider,
+        ILogger<ApplyMigrations> logger,
+        IHostEnvironment hostEnvironment)
     {
         _serviceProvider = serviceProvider;
 
         _logger = logger;
+
+        _hostEnvironment = hostEnvironment;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        if (_hostEnvironment.IsEnvironment("Test"))
+        {
+            _logger.LogInformation("Skipping migrations in Test environment.");
+
+            return;
+        }
+
         var assembly = typeof(Program).Assembly;
 
-        var dbContextTypes = assembly.GetTypes()
-                                     .Where(type => type is
-                                                    {
-                                                        IsAbstract: false,
-                                                        IsGenericTypeDefinition: false
-                                                    } &&
-                                                    typeof(DbContext).IsAssignableFrom(type)
-                                     )
-                                     .ToArray();
+        var dbContextTypes = assembly
+            .GetTypes()
+            .Where(type => type is { IsAbstract: false, IsGenericTypeDefinition: false } && typeof(DbContext).IsAssignableFrom(type))
+            .ToArray();
 
         if (dbContextTypes.Length == 0)
         {
