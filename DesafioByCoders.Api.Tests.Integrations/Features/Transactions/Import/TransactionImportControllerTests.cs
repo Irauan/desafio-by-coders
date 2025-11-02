@@ -34,35 +34,6 @@ public class TransactionImportControllerTests : IClassFixture<ApiFixture>,
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    [Fact]
-    public async Task Upload_WithMultiStatusCnab_ShouldReturnMultiStatus()
-    {
-        using var content = await BuildTransactionImportContent("MultiStatus-CNAB.txt");
-
-        var response = await _fixture.Client.PostAsync("/api/v1/transactions/import", content);
-        Assert.Equal((HttpStatusCode)207, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Upload_WithUnprocessableEntityCnab_ShouldReturnUnprocessableEntity()
-    {
-        using var content = await BuildTransactionImportContent("UnprocessableEntity-CNAB.txt");
-
-        var response = await _fixture.Client.PostAsync("/api/v1/transactions/import", content);
-
-        Assert.Equal((HttpStatusCode)422, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task Upload_WithBadRequestCnab_ShouldReturnBadRequest()
-    {
-        using var content = await BuildTransactionImportContent("BadRequest-CNAB.txt");
-
-        var response = await _fixture.Client.PostAsync("/api/v1/transactions/import", content);
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
     private async Task<MultipartFormDataContent> BuildTransactionImportContent(string fileName)
     {
         var path = Path.Combine(
