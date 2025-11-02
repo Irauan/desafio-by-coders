@@ -362,3 +362,5 @@ MigrationBackup/
 FodyWeavers.xsd
 /.idea/*
 /MusaTec.Ui.Angular/.vscode
+/DesafioByCoders.AppHost/data
+/.github
