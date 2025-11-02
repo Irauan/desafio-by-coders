@@ -1,9 +1,12 @@
 ﻿using DesafioByCoders.Api.Handlers;
 using DesafioByCoders.Api.Messages;
-using EFCore.BulkExtensions;
 
 namespace DesafioByCoders.Api.Features.Transactions.Import;
 
+/// <summary>
+/// Imports a CNAB file, registers missing stores, records all valid transactions,
+/// and returns a clear summary of what was imported and what failed per store.
+/// </summary>
 internal class TransactionImportHandler : IHandler<TransactionImportCommand, TransactionImportResult>
 {
     private readonly IStoreRepository _storeRepository;
@@ -17,6 +20,10 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
         _cnabTimeZone = TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo");
     }
 
+    /// <summary>
+    /// Processes the upload: validates lines, creates missing stores,
+    /// saves transactions, and returns totals plus a per-store summary and any validation issues.
+    /// </summary>
     public async Task<TransactionImportResult> HandleAsync(TransactionImportCommand request, CancellationToken cancellationToken = default)
     {
         var (parsedRecords, validationErrors) = ParseCnabRecords(request.CnabRecords);
