@@ -1,41 +1,98 @@
 ﻿using DesafioByCoders.Api.Features;
 using DesafioByCoders.Api.Features.Transactions;
-using DesafioByCoders.Api.Tests.Integrations;
 using Microsoft.EntityFrameworkCore;
 
 namespace DesafioByCoders.Api.Tests.Integrations.Features.Transactions;
 
-public class TransactionRepositoryTests : IClassFixture<PostgresContainerFixture>
+public class TransactionRepositoryTests : IClassFixture<PostgresContainerFixture>,
+                                          IAsyncLifetime
 {
-    private readonly PostgresContainerFixture fixture;
+    private readonly PostgresContainerFixture _fixture;
 
     public TransactionRepositoryTests(PostgresContainerFixture fixture)
     {
-        this.fixture = fixture;
+        _fixture = fixture;
     }
+
+    public async Task InitializeAsync()
+    {
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        await ctx.Database.EnsureDeletedAsync();
+        await ctx.Database.EnsureCreatedAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task BulkInsertAsync_InsertsTransactionsAndPersistsFields()
     {
-        await using var ctx = this.fixture.CreateDbContext();
-        await ctx.Database.EnsureDeletedAsync();
-        await ctx.Database.EnsureCreatedAsync();
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
 
         var store = Store.Create("Loja 1", "Owner");
         await ctx.Stores.AddAsync(store);
         await ctx.SaveChangesAsync();
 
-        var t1 = Transaction.Create(store.Id, TransactionType.Debit, 100.00m, new DateTime(2024, 10, 5, 12, 0, 0, DateTimeKind.Utc), "12345678901", "111122223333", "raw-1");
-        var t2 = Transaction.Create(store.Id, TransactionType.Boleto, 50.00m, new DateTime(2024, 10, 5, 13, 0, 0, DateTimeKind.Utc), "12345678901", "111122223333", "raw-2");
-        var t3 = Transaction.Create(store.Id, TransactionType.Credit, 0.01m, new DateTime(2024, 10, 5, 14, 0, 0, DateTimeKind.Utc), "12345678901", "111122223333", "raw-3");
+        var t1 = Transaction.Create(
+            store.Id,
+            TransactionType.Debit,
+            100.00m,
+            new DateTime(
+                2024,
+                10,
+                5,
+                12,
+                0,
+                0,
+                DateTimeKind.Utc
+            ),
+            "12345678901",
+            "111122223333",
+            "raw-1"
+        );
+        var t2 = Transaction.Create(
+            store.Id,
+            TransactionType.Boleto,
+            50.00m,
+            new DateTime(
+                2024,
+                10,
+                5,
+                13,
+                0,
+                0,
+                DateTimeKind.Utc
+            ),
+            "12345678901",
+            "111122223333",
+            "raw-2"
+        );
+        var t3 = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            0.01m,
+            new DateTime(
+                2024,
+                10,
+                5,
+                14,
+                0,
+                0,
+                DateTimeKind.Utc
+            ),
+            "12345678901",
+            "111122223333",
+            "raw-3"
+        );
 
         var repo = new TransactionRepository(ctx);
 
-        await repo.BulkInsertAsync(new[] { t1, t2, t3 }, CancellationToken.None);
+        await repo.BulkInsertAsync([t1, t2, t3], CancellationToken.None);
 
-        var transactions = await ctx.Transactions.AsNoTracking()
-            .OrderBy(t => t.OccurredAtUtc)
-            .ToListAsync();
+        var transactions = await ctx.Transactions
+                                    .AsNoTracking()
+                                    .OrderBy(t => t.OccurredAtUtc)
+                                    .ToListAsync();
 
         Assert.Equal(3, transactions.Count);
 
@@ -55,9 +112,7 @@ public class TransactionRepositoryTests : IClassFixture<PostgresContainerFixture
     [Fact]
     public async Task BulkInsertAsync_WithDuplicateRawLineHash_ShouldThrow()
     {
-        await using var ctx = this.fixture.CreateDbContext();
-        await ctx.Database.EnsureDeletedAsync();
-        await ctx.Database.EnsureCreatedAsync();
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
 
         var store = Store.Create("Loja 2", "Owner");
         await ctx.Stores.AddAsync(store);
@@ -65,12 +120,44 @@ public class TransactionRepositoryTests : IClassFixture<PostgresContainerFixture
 
         // same raw line to force duplicate RawLineHash unique constraint violation
         var raw = "DUPLICATE-RAW";
-        var a = Transaction.Create(store.Id, TransactionType.Credit, 10.00m, new DateTime(2024, 10, 6, 12, 0, 0, DateTimeKind.Utc), "12345678901", "111122223333", raw);
-        var b = Transaction.Create(store.Id, TransactionType.Debit, 5.00m, new DateTime(2024, 10, 6, 13, 0, 0, DateTimeKind.Utc), "12345678901", "111122223333", raw);
+        var a = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            10.00m,
+            new DateTime(
+                2024,
+                10,
+                6,
+                12,
+                0,
+                0,
+                DateTimeKind.Utc
+            ),
+            "12345678901",
+            "111122223333",
+            raw
+        );
+        var b = Transaction.Create(
+            store.Id,
+            TransactionType.Debit,
+            5.00m,
+            new DateTime(
+                2024,
+                10,
+                6,
+                13,
+                0,
+                0,
+                DateTimeKind.Utc
+            ),
+            "12345678901",
+            "111122223333",
+            raw
+        );
 
         var repo = new TransactionRepository(ctx);
 
-        var ex = await Record.ExceptionAsync(() => repo.BulkInsertAsync(new[] { a, b }, CancellationToken.None));
+        var ex = await Record.ExceptionAsync(() => repo.BulkInsertAsync([a, b], CancellationToken.None));
 
         Assert.NotNull(ex);
     }

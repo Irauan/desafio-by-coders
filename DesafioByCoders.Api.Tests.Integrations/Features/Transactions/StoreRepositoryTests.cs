@@ -4,21 +4,30 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DesafioByCoders.Api.Tests.Integrations.Features.Transactions;
 
-public class StoreRepositoryTests : IClassFixture<PostgresContainerFixture>
+public class StoreRepositoryTests : IClassFixture<PostgresContainerFixture>,
+                                    IAsyncLifetime
 {
-    private readonly PostgresContainerFixture fixture;
+    private readonly PostgresContainerFixture _fixture;
 
     public StoreRepositoryTests(PostgresContainerFixture fixture)
     {
-        this.fixture = fixture;
+        _fixture = fixture;
     }
+
+    public async Task InitializeAsync()
+    {
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        await ctx.Database.EnsureDeletedAsync();
+        await ctx.Database.EnsureCreatedAsync();
+    }
+
+    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetExistentStores_ReturnsOnlyMatchingByLowercaseName()
     {
-        await using var ctx = this.fixture.CreateDbContext();
-        await ctx.Database.EnsureDeletedAsync();
-        await ctx.Database.EnsureCreatedAsync();
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
 
         var s1 = Store.Create("MERCADO A", "ALICE");
         var s2 = Store.Create("Farmacia B", "BOB");
@@ -29,7 +38,11 @@ public class StoreRepositoryTests : IClassFixture<PostgresContainerFixture>
 
         var repo = new StoreRepository(ctx);
 
-        var identifiers = new HashSet<string> { "mercado a", "farmacia b" };
+        var identifiers = new HashSet<string>
+        {
+            "mercado a",
+            "farmacia b"
+        };
 
         var result = await repo.GetExistentStores(identifiers);
 
@@ -42,9 +55,7 @@ public class StoreRepositoryTests : IClassFixture<PostgresContainerFixture>
     [Fact]
     public async Task BulkInsertAsync_InsertsStoresAndSetsIdentity()
     {
-        await using var ctx = this.fixture.CreateDbContext();
-        await ctx.Database.EnsureDeletedAsync();
-        await ctx.Database.EnsureCreatedAsync();
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
 
         var toInsert = new List<Store>
         {
@@ -58,10 +69,20 @@ public class StoreRepositoryTests : IClassFixture<PostgresContainerFixture>
 
         Assert.All(toInsert, s => Assert.True(s.Id > 0));
 
-        var all = await ctx.Stores.AsNoTracking().OrderBy(s => s.Id).ToListAsync();
+        var all = await ctx.Stores.AsNoTracking()
+                           .OrderBy(s => s.Id)
+                           .ToListAsync();
 
         Assert.Equal(2, all.Count);
-        Assert.Equal("loja x", all[0].ToString());
-        Assert.Equal("loja y", all[1].ToString());
+        Assert.Equal(
+            "loja x",
+            all[0]
+                .ToString()
+        );
+        Assert.Equal(
+            "loja y",
+            all[1]
+                .ToString()
+        );
     }
 }
