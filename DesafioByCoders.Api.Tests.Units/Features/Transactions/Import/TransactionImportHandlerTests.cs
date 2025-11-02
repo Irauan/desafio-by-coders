@@ -67,7 +67,7 @@ public class TransactionImportHandlerTests
 
         Assert.Equal(2, capturedTransactions.Count);
 
-        var summary = result.ImportSummaryPerStores.OrderBy(x => x.StoreName).ToList();
+        var summary = result.ImportedSummaryPerStores.OrderBy(x => x.StoreName).ToList();
         
         Assert.Equal(2, summary.Count);
         Assert.Equal("farmacia b", summary[0].StoreName);
@@ -96,9 +96,9 @@ public class TransactionImportHandlerTests
         Assert.Contains(result.ValidationErrors, e => e.Code == "CNAB_INVALID_TYPE");
 
         Assert.Single(capturedTransactions);
-        Assert.Single(result.ImportSummaryPerStores);
-        Assert.Equal("mercado a", result.ImportSummaryPerStores[0].StoreName);
-        Assert.Equal(1, result.ImportSummaryPerStores[0].Imported);
+        Assert.Single(result.ImportedSummaryPerStores);
+        Assert.Equal("mercado a", result.ImportedSummaryPerStores[0].StoreName);
+        Assert.Equal(1, result.ImportedSummaryPerStores[0].Imported);
     }
 
     [Fact]
@@ -126,9 +126,9 @@ public class TransactionImportHandlerTests
         Assert.Equal(2, result.TotalLinesImported);
         Assert.Empty(capturedStores);
         Assert.Equal(2, capturedTransactions.Count);
-        Assert.Single(result.ImportSummaryPerStores);
-        Assert.Equal("mercado a", result.ImportSummaryPerStores[0].StoreName);
-        Assert.Equal(2, result.ImportSummaryPerStores[0].Imported);
+        Assert.Single(result.ImportedSummaryPerStores);
+        Assert.Equal("mercado a", result.ImportedSummaryPerStores[0].StoreName);
+        Assert.Equal(2, result.ImportedSummaryPerStores[0].Imported);
     }
 
     [Fact]
@@ -146,8 +146,8 @@ public class TransactionImportHandlerTests
         Assert.Single(capturedStores);
         Assert.Equal("mercado a", capturedStores[0].ToString());
         Assert.Equal(2, capturedTransactions.Count);
-        Assert.Single(result.ImportSummaryPerStores);
-        Assert.Equal(2, result.ImportSummaryPerStores[0].Imported);
+        Assert.Single(result.ImportedSummaryPerStores);
+        Assert.Equal(2, result.ImportedSummaryPerStores[0].Imported);
     }
 
     private static string BuildLine(
