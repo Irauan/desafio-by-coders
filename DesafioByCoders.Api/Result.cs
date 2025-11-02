@@ -47,29 +47,4 @@ public abstract record Result<TSuccess>
     {
         return (List<ValidationError>)(Failure)result;
     }
-    
-    public TResult Match<TResult>(Func<TSuccess, TResult> onSuccess, Func<List<ValidationError>, TResult> onError)
-    {
-        return this switch
-        {
-            Success success => onSuccess(success.Value),
-            Failure errors => onError(errors.Errors),
-            _ => throw new InvalidOperationException()
-        };
-    }
-
-    public void Switch(Action<TSuccess> onSuccess, Action<List<ValidationError>> onError)
-    {
-        switch (this)
-        {
-            case Success success:
-                onSuccess(success.Value);
-
-                break;
-            case Failure errors:
-                onError(errors.Errors);
-
-                break;
-        }
-    }
 }

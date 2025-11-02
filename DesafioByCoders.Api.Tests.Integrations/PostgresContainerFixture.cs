@@ -4,33 +4,21 @@ using Testcontainers.PostgreSql;
 
 namespace DesafioByCoders.Api.Tests.Integrations;
 
-public sealed class PostgresContainerFixture : IAsyncLifetime,
-                                               IDisposable
+public class PostgresContainerFixture : IAsyncLifetime,
+                                        IDisposable
 {
-    private readonly PostgreSqlContainer _container;
+    private readonly PostgreSqlContainer _container = new PostgreSqlBuilder().WithDatabase("testdb")
+                                                                             .WithUsername("postgres")
+                                                                             .WithPassword("postgres")
+                                                                             .Build();
 
     public string ConnectionString { get; private set; } = string.Empty;
-
-    public PostgresContainerFixture()
-    {
-        _container = new PostgreSqlBuilder().WithDatabase("testdb")
-                                            .WithUsername("postgres")
-                                            .WithPassword("postgres")
-                                            .Build();
-    }
 
     public async Task InitializeAsync()
     {
         await _container.StartAsync();
 
         ConnectionString = _container.GetConnectionString();
-
-        var options = new DbContextOptionsBuilder<TransactionDbContext>()
-                      .UseNpgsql(ConnectionString)
-                      .Options;
-
-        await using var ctx = new TransactionDbContext(options);
-        await ctx.Database.EnsureCreatedAsync();
     }
 
     public async Task DisposeAsync()
@@ -46,12 +34,18 @@ public sealed class PostgresContainerFixture : IAsyncLifetime,
                   .GetResult();
     }
 
-    internal TransactionDbContext CreateDbContext()
+    public TDbContext CreateDbContext<TDbContext>() where TDbContext : DbContext
     {
-        var options = new DbContextOptionsBuilder<TransactionDbContext>()
-                      .UseNpgsql(ConnectionString)
-                      .Options;
+        var options = new DbContextOptionsBuilder<TDbContext>().UseNpgsql(ConnectionString)
+                                                               .Options;
 
-        return new TransactionDbContext(options);
+        var instance = Activator.CreateInstance(typeof(TDbContext), options);
+
+        if (instance is null)
+        {
+            throw new InvalidOperationException($"Could not create DbContext of type {typeof(TDbContext).FullName}. Ensure it has a constructor that accepts DbContextOptions<{typeof(TDbContext).Name}>.");
+        }
+
+        return (TDbContext)instance;
     }
 }

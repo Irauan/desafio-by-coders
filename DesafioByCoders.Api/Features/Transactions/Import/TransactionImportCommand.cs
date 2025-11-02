@@ -2,4 +2,4 @@
 
 namespace DesafioByCoders.Api.Features.Transactions.Import;
 
-internal record TransactionImportCommand(List<string> CnabRecords) : IRequest;
+public record TransactionImportCommand(List<string> CnabRecords) : IRequest;
