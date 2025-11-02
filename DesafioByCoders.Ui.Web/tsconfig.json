@@ -34,7 +34,6 @@
     "node_modules",
     "dist",
     "output",
-    "out-tsc",
-    "**/*.spec.ts"
+    "out-tsc"
   ]
 }
