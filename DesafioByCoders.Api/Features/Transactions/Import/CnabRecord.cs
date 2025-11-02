@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using DesafioByCoders.Api.Messages;
 
-namespace DesafioByCoders.Api.Features.Transactions;
+namespace DesafioByCoders.Api.Features.Transactions.Import;
 
 internal sealed class CnabRecord
 {

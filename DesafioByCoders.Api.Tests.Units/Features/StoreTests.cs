@@ -1,4 +1,4 @@
-﻿using DesafioByCoders.Api.Features;
+﻿using DesafioByCoders.Api.Features.Transactions;
 
 namespace DesafioByCoders.Api.Tests.Units.Features;
 

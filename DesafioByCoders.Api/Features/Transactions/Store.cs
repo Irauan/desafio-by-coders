@@ -1,4 +1,4 @@
-﻿namespace DesafioByCoders.Api.Features;
+﻿namespace DesafioByCoders.Api.Features.Transactions;
 
 internal sealed class Store
 {

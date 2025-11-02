@@ -1,8 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using DesafioByCoders.Api.Features.Transactions;
 
-namespace DesafioByCoders.Api.Features;
+namespace DesafioByCoders.Api.Features.Transactions;
 
 internal sealed class Transaction
 {

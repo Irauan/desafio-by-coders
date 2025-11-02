@@ -1,4 +1,5 @@
 ﻿using DesafioByCoders.Api.Features.Transactions;
+using DesafioByCoders.Api.Features.Transactions.Import;
 using DesafioByCoders.Api.Messages;
 
 namespace DesafioByCoders.Api.Tests.Units.Features.Transactions;
