@@ -1,8 +1,11 @@
+using System.Data;
 using System.Runtime.CompilerServices;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using DesafioByCoders.Api.Features.Stores.List;
 using DesafioByCoders.Api.Features.Transactions;
-using Microsoft.EntityFrameworkCore;
+using DesafioByCoders.Api.Handlers;
+using Npgsql;
 using Scalar.AspNetCore;
 
 [assembly: InternalsVisibleTo("DesafioByCoders.Api.Tests.Units")]
@@ -30,6 +33,8 @@ internal class Program
         
         builder.Services.AddTransactionSlice(connectionString);
         
+        builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(connectionString));
+        
         builder.Services.AddApiVersioning(o =>
             {
                 o.AssumeDefaultVersionWhenUnspecified = true;
@@ -44,10 +49,10 @@ internal class Program
         );
         
         builder.Services.Scan(scan => scan.FromAssemblyOf<Program>()
-                                          .AddClasses(c => c.AssignableTo(typeof(Handlers.IHandler<>)), publicOnly: false)
+                                          .AddClasses(c => c.AssignableTo(typeof(IHandler<>)), publicOnly: false)
                                           .AsImplementedInterfaces()
                                           .WithScopedLifetime()
-                                          .AddClasses(c => c.AssignableTo(typeof(Handlers.IHandler<,>)), publicOnly: false)
+                                          .AddClasses(c => c.AssignableTo(typeof(IHandler<,>)), publicOnly: false)
                                           .AsImplementedInterfaces()
                                           .WithScopedLifetime()
         );
@@ -90,6 +95,9 @@ internal class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
+
+        // Minimal APIs
+        app.MapStoreList();
 
         app.MapControllers();
 
