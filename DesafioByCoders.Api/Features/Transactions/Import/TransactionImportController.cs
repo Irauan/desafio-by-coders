@@ -61,20 +61,7 @@ public class TransactionImportController : ControllerBase
             return BadRequest("File is empty.");
         }
 
-        await using var stream = file.OpenReadStream();
-
-        using var reader = new StreamReader(stream);
-
-        var cnabRows = new List<string>();
-
-        while (!reader.EndOfStream)
-        {
-            var line = await reader.ReadLineAsync(cancellationToken) ?? "";
-
-            cnabRows.Add(line);
-        }
-
-        var command = new TransactionImportCommand(cnabRows);
+        var command = await CreateTransactionImportCommand(file, cancellationToken);
 
         var result = await _handler.HandleAsync(command, cancellationToken);
 
@@ -100,6 +87,26 @@ public class TransactionImportController : ControllerBase
                 ]
             )
         );
+    }
+
+    private static async Task<TransactionImportCommand> CreateTransactionImportCommand(IFormFile file, CancellationToken cancellationToken)
+    {
+        await using var stream = file.OpenReadStream();
+
+        using var reader = new StreamReader(stream);
+
+        var cnabRows = new List<string>();
+
+        while (!reader.EndOfStream)
+        {
+            var line = await reader.ReadLineAsync(cancellationToken) ?? "";
+
+            cnabRows.Add(line);
+        }
+
+        var command = new TransactionImportCommand(cnabRows);
+
+        return command;
     }
 
     /// <summary>
