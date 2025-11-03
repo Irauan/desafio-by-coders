@@ -2,6 +2,7 @@ using System.Data;
 using System.Runtime.CompilerServices;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using DesafioByCoders.Api.Features;
 using DesafioByCoders.Api.Features.Stores.List;
 using DesafioByCoders.Api.Features.Transactions;
 using DesafioByCoders.Api.Handlers;
@@ -56,6 +57,10 @@ internal class Program
                                           .AsImplementedInterfaces()
                                           .WithScopedLifetime()
         );
+        
+        // Decorate all handlers with logging
+        builder.Services.Decorate(typeof(IHandler<>), typeof(LoggingHandlerDecorator<>));
+        builder.Services.Decorate(typeof(IHandler<,>), typeof(LoggingHandlerDecorator<,>));
         
         builder.Services.AddControllers();
         
