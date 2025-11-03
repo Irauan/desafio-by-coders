@@ -58,8 +58,6 @@ internal class Program
                                           .WithScopedLifetime()
         );
         
-        // Decorate all handlers with logging
-        builder.Services.Decorate(typeof(IHandler<>), typeof(LoggingHandlerDecorator<>));
         builder.Services.Decorate(typeof(IHandler<,>), typeof(LoggingHandlerDecorator<,>));
         
         builder.Services.AddControllers();
