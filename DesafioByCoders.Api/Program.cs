@@ -6,6 +6,7 @@ using DesafioByCoders.Api.Features;
 using DesafioByCoders.Api.Features.Stores.List;
 using DesafioByCoders.Api.Features.Transactions;
 using DesafioByCoders.Api.Handlers;
+using DesafioByCoders.Api.Middleware;
 using Npgsql;
 using Scalar.AspNetCore;
 using Serilog;
@@ -153,6 +154,9 @@ internal class Program
                 diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
             };
         });
+
+        // Add global exception handling middleware
+        app.UseExceptionHandling();
 
         app.UseHttpsRedirection();
 
