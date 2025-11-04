@@ -8,6 +8,8 @@ using DesafioByCoders.Api.Features.Transactions;
 using DesafioByCoders.Api.Handlers;
 using Npgsql;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Events;
 
 [assembly: InternalsVisibleTo("DesafioByCoders.Api.Tests.Units")]
 [assembly: InternalsVisibleTo("DesafioByCoders.Api.Tests.Integrations")]
@@ -19,9 +21,40 @@ internal class Program
 {
     public static void Main(string[] args)
     {
-        var builder = WebApplication.CreateBuilder(args);
+        // Configure Serilog for structured logging
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .Enrich.WithMachineName()
+            .Enrich.WithEnvironmentName()
+            .Enrich.WithProcessId()
+            .Enrich.WithThreadId()
+            .WriteTo.Console(
+                outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
+            )
+            .CreateLogger();
 
-        builder.AddServiceDefaults();
+        try
+        {
+            Log.Information("Starting DesafioByCoders API application");
+            
+            var builder = WebApplication.CreateBuilder(args);
+            
+            // Use Serilog for logging
+            builder.Host.UseSerilog((context, services, configuration) => configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .ReadFrom.Services(services)
+                .Enrich.FromLogContext()
+                .Enrich.WithMachineName()
+                .Enrich.WithEnvironmentName()
+                .Enrich.WithProcessId()
+                .Enrich.WithThreadId()
+            );
+
+            builder.AddServiceDefaults();
 
         // Add services to the container.
         var connectionString = builder.Configuration
@@ -108,6 +141,19 @@ internal class Program
             );
         }
 
+        // Add Serilog request logging (before UseHttpsRedirection)
+        app.UseSerilogRequestLogging(options =>
+        {
+            options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+            options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+            {
+                diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+                diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+                diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.ToString());
+                diagnosticContext.Set("RemoteIP", httpContext.Connection.RemoteIpAddress);
+            };
+        });
+
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
@@ -117,6 +163,19 @@ internal class Program
 
         app.MapControllers();
 
-        app.Run();
+            Log.Information("DesafioByCoders API started successfully");
+            
+            app.Run();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Application terminated unexpectedly");
+            throw;
+        }
+        finally
+        {
+            Log.Information("Shutting down DesafioByCoders API");
+            Log.CloseAndFlush();
+        }
     }
 }
