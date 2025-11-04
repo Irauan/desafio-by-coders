@@ -7,6 +7,7 @@ export interface TransactionImportOkResponse
     status: number;
     totalImportedLines: number;
     importedSummaryPerStores: Array<{ storeName: string; imported: number }>;
+    totalLinesDuplicate: number;
 }
 
 export interface TransactionImportErrorResponse

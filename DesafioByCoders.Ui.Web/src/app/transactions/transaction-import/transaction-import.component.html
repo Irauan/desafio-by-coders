@@ -25,6 +25,10 @@
                 <h3>Total Lines Imported</h3>
                 <div class="value">{{ importSummary?.totalImportedLines || 0 }}</div>
             </div>
+            <div class="summary-card warning">
+                <h3>Total Duplicates Skipped</h3>
+                <div class="value">{{ importSummary?.totalLinesDuplicate || 0 }}</div>
+            </div>
             <div class="summary-card error">
                 <h3>Total Errors</h3>
                 <div class="value">{{ validationErrors?.length || 0 }}</div>
