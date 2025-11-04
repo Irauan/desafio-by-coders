@@ -364,3 +364,6 @@ FodyWeavers.xsd
 /MusaTec.Ui.Angular/.vscode
 /DesafioByCoders.AppHost/data
 /.github
+
+# Docker environment variables (contains sensitive data)
+.env
