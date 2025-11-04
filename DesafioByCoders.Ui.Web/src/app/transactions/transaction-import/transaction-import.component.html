@@ -1,0 +1,64 @@
+﻿<div class="container">
+    <div class="header">
+        <h1>CNAB File Import</h1>
+    </div>
+
+    <div class="upload-section" *ngIf="!hasCompletedImport">
+        <div class="file-input-wrapper">
+            <input type="file" (change)="onFileChange($event)" class="file-input" accept=".cnab,.txt,.rem"/>
+            <label class="file-input-label">Select CNAB File</label>
+        </div>
+        <div class="file-name">{{ fileToUpload?.name || 'No file selected' }}</div>
+        <button class="import-button" [disabled]="!fileToUpload || isUploading" (click)="onImport()">{{ isUploading ? 'Importing...' : 'Import File' }}</button>
+    </div>
+
+    <div class="loading" *ngIf="isUploading">
+        <div class="spinner"></div>
+        <p>Processing CNAB file...</p>
+    </div>
+
+    <div class="results" *ngIf="hasCompletedImport">
+        <h2>Import Results</h2>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Total Lines Imported</h3>
+                <div class="value">{{ importSummary?.totalImportedLines || 0 }}</div>
+            </div>
+            <div class="summary-card error">
+                <h3>Total Errors</h3>
+                <div class="value">{{ validationErrors?.length || 0 }}</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Imported by Store</h3>
+            <div class="store-grid">
+                <div class="store-card" *ngFor="let s of importSummary?.importedSummaryPerStores">
+                    <h4>{{ s.storeName }}</h4>
+                    <div class="count">{{ s.imported }} lines</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Validation Errors</h3>
+            <div class="error-list">
+                <div class="error-item" *ngFor="let e of validationErrors">
+                    <div class="error-code">{{ e.code }}</div>
+                    <div class="error-message">{{ e.message }}</div>
+                </div>
+                <div class="error-item" *ngIf="validationErrors.length === 0">
+                    <span style="color: #28a745;">No validation errors found!</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Balance by Store</h3>
+            <app-store-list></app-store-list>
+        </div>
+
+        <button class="new-import-button" (click)="hasCompletedImport = false; fileToUpload = null; importSummary = null; validationErrors = []">Import Another File</button>
+    </div>
+</div>
