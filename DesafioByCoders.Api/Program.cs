@@ -32,6 +32,19 @@ internal class Program
             throw new InvalidOperationException("The settings ConnectionStrings:desafiobycoders is required.");
         }
         
+        // Add custom health checks for database
+        builder.Services.AddHealthChecks()
+               .AddNpgSql(
+                   connectionString,
+                   name: "postgresql",
+                   tags: new[] { "ready", "db" },
+                   timeout: TimeSpan.FromSeconds(5)
+               )
+               .AddDbContextCheck<TransactionDbContext>(
+                   name: "transactiondb_context",
+                   tags: new[] { "ready", "db", "ef" }
+               );
+        
         builder.Services.AddTransactionSlice(connectionString);
         
         builder.Services.AddScoped<IDbConnection>(_ => new NpgsqlConnection(connectionString));
