@@ -1,0 +1,32 @@
+﻿<div *ngIf="isLoading" class="loading">
+    <p>Loading stores...</p>
+</div>
+
+<div *ngIf="error" class="error">
+    <p>{{ error }}</p>
+    <button (click)="loadStores()">Retry</button>
+</div>
+
+<table class="balance-table" *ngIf="!isLoading && !error && stores && stores.length; else noData">
+    <thead>
+    <tr>
+        <th>Store</th>
+        <th>Owner</th>
+        <th>Balance</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let item of stores">
+        <td>{{ item.name }}</td>
+        <td>{{ item.owner }}</td>
+        <td>
+        <span class="balance-amount" [class.negative]="item.balance < 0">
+          {{ item.balance | currency:'USD':'symbol':'1.2-2' }}
+        </span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<ng-template #noData>
+    <div class="file-name" *ngIf="!isLoading && !error">No stores to display yet.</div>
+</ng-template>

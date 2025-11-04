@@ -1,0 +1,27 @@
+﻿.balance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.balance-table th {
+    background: #1e1e2e;
+    color: white;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.balance-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #555570;
+    color: #e0e0e0;
+}
+
+.balance-amount {
+    font-weight: bold;
+    color: #28a745;
+}
+
+.balance-amount.negative {
+    color: #dc3545;
+}
