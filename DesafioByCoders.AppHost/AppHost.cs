@@ -1,4 +1,5 @@
 using Projects;
+using Aspire.Hosting;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -11,9 +12,13 @@ var postgres = builder.AddPostgres("desafiobycoders-db")
 
 var desafioByCodersDb = postgres.AddDatabase("desafiobycoders");
 
-builder.AddProject<DesafioByCoders_Api>("desafiobycoders-api")
-       .WaitFor(desafioByCodersDb)
-       .WithReference(desafioByCodersDb);
+var api = builder.AddProject<DesafioByCoders_Api>("desafiobycoders-api")
+                 .WaitFor(desafioByCodersDb)
+                 .WithReference(desafioByCodersDb);
 
+var ui = builder.AddNpmApp("desafiobycoders-ui-web", "../DesafioByCoders.Ui.Web")
+                .WithReference(api)
+                .WaitFor(api);
 
-builder.Build().Run();
+builder.Build()
+       .Run();
