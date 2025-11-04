@@ -1,35 +1,35 @@
-import { TestBed } from '@angular/core/testing';
-import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+import {TestBed} from '@angular/core/testing';
+import {RouterTestingModule} from '@angular/router/testing';
+import {AppComponent} from './app.component';
 
-describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [
-        RouterModule.forRoot([])
-      ],
-      declarations: [
-        AppComponent
-      ],
-    }).compileComponents();
-  });
+describe('AppComponent', () =>
+{
+    beforeEach(async () =>
+    {
+        await TestBed.configureTestingModule({
+            imports: [
+                RouterTestingModule
+            ],
+            declarations: [
+                AppComponent
+            ],
+        }).compileComponents();
+    });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+    it('should create the app', () =>
+    {
+        const fixture = TestBed.createComponent(AppComponent);
+        const app = fixture.componentInstance;
 
-  it(`should have as title 'DesafioByCoders.Ui.Web'`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('DesafioByCoders.Ui.Web');
-  });
+        expect(app).toBeTruthy();
+    });
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, DesafioByCoders.Ui.Web');
-  });
+    it('should render a router-outlet', () =>
+    {
+        const fixture = TestBed.createComponent(AppComponent);
+        fixture.detectChanges();
+
+        const compiled = fixture.nativeElement as HTMLElement;
+        expect(compiled.querySelector('router-outlet')).not.toBeNull();
+    });
 });
