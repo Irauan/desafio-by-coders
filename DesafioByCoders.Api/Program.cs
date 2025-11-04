@@ -117,30 +117,39 @@ internal class Program
 
         app.MapDefaultEndpoints();
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
+        // Explicitly map health endpoints for all environments (required for Docker health checks)
+        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/alive", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {
-            app.MapOpenApi();
+            Predicate = r => r.Tags.Contains("live")
+        });
+        app.MapHealthChecks("/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("ready")
+        });
 
-            var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+        // Configure the HTTP request pipeline.
+        // Map OpenAPI and Scalar UI in all environments (including Production)
+        app.MapOpenApi();
 
-            foreach (var apiVersionDesc in provider.ApiVersionDescriptions)
-            {
-                app.MapOpenApi($"/openapi/{apiVersionDesc.GroupName}.json")
-                   .WithGroupName(apiVersionDesc.GroupName);
-            }
+        var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
-            app.MapScalarApiReference(options =>
-                {
-                    options.Title = "Desafio ByCoders API Docs";
-
-                    foreach (var apiVersionDesc in provider.ApiVersionDescriptions)
-                    {
-                        options.AddDocument(apiVersionDesc.GroupName, routePattern: $"/openapi/{apiVersionDesc.GroupName}.json");
-                    }
-                }
-            );
+        foreach (var apiVersionDesc in provider.ApiVersionDescriptions)
+        {
+            app.MapOpenApi($"/openapi/{apiVersionDesc.GroupName}.json")
+               .WithGroupName(apiVersionDesc.GroupName);
         }
+
+        app.MapScalarApiReference(options =>
+            {
+                options.Title = "Desafio ByCoders API Docs";
+
+                foreach (var apiVersionDesc in provider.ApiVersionDescriptions)
+                {
+                    options.AddDocument(apiVersionDesc.GroupName, routePattern: $"/openapi/{apiVersionDesc.GroupName}.json");
+                }
+            }
+        );
 
         // Add Serilog request logging (before UseHttpsRedirection)
         app.UseSerilogRequestLogging(options =>
@@ -158,7 +167,8 @@ internal class Program
         // Add global exception handling middleware
         app.UseExceptionHandling();
 
-        app.UseHttpsRedirection();
+        // HTTPS redirection disabled (serve HTTP only as requested)
+        // app.UseHttpsRedirection();
 
         app.UseAuthorization();
 
