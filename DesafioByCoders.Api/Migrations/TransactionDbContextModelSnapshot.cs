@@ -46,7 +46,8 @@ namespace DesafioByCoders.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_stores_name_search");
 
                     b.ToTable("stores", (string)null);
                 });
@@ -103,7 +104,8 @@ namespace DesafioByCoders.Api.Migrations
                     b.HasIndex("RawLineHash")
                         .IsUnique();
 
-                    b.HasIndex("StoreId");
+                    b.HasIndex("StoreId")
+                        .HasDatabaseName("ix_transactions_store_id");
 
                     b.ToTable("transactions", (string)null);
                 });
