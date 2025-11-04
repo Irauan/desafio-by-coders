@@ -161,4 +161,300 @@ public class TransactionRepositoryTests : IClassFixture<PostgresContainerFixture
 
         Assert.NotNull(ex);
     }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithEmptyInput_ReturnsEmptySet()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+        var repo = new TransactionRepository(ctx);
+        var emptyHashes = Array.Empty<string>();
+
+        // Act
+        var result = await repo.GetExistingHashesAsync(emptyHashes, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithNoMatchingHashes_ReturnsEmptySet()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        var store = Store.Create("Loja Test", "Owner Test");
+        await ctx.Stores.AddAsync(store);
+        await ctx.SaveChangesAsync();
+
+        var transaction = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            100.00m,
+            new DateTime(2024, 10, 10, 12, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "existing-raw-line"
+        );
+
+        await ctx.Transactions.AddAsync(transaction);
+        await ctx.SaveChangesAsync();
+
+        var repo = new TransactionRepository(ctx);
+        var nonExistentHashes = new[] { "hash-does-not-exist-1", "hash-does-not-exist-2" };
+
+        // Act
+        var result = await repo.GetExistingHashesAsync(nonExistentHashes, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithAllMatchingHashes_ReturnsAllHashes()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        var store = Store.Create("Loja All Match", "Owner");
+        await ctx.Stores.AddAsync(store);
+        await ctx.SaveChangesAsync();
+
+        var t1 = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            100.00m,
+            new DateTime(2024, 10, 11, 12, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "raw-line-1"
+        );
+        var t2 = Transaction.Create(
+            store.Id,
+            TransactionType.Debit,
+            50.00m,
+            new DateTime(2024, 10, 11, 13, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "raw-line-2"
+        );
+        var t3 = Transaction.Create(
+            store.Id,
+            TransactionType.Boleto,
+            25.00m,
+            new DateTime(2024, 10, 11, 14, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "raw-line-3"
+        );
+
+        await ctx.Transactions.AddRangeAsync(t1, t2, t3);
+        await ctx.SaveChangesAsync();
+
+        var repo = new TransactionRepository(ctx);
+        var searchHashes = new[] { t1.RawLineHash, t2.RawLineHash, t3.RawLineHash };
+
+        // Act
+        var result = await repo.GetExistingHashesAsync(searchHashes, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(3, result.Count);
+        Assert.Contains(t1.RawLineHash, result);
+        Assert.Contains(t2.RawLineHash, result);
+        Assert.Contains(t3.RawLineHash, result);
+    }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithPartialMatches_ReturnsOnlyMatchingHashes()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        var store = Store.Create("Loja Partial", "Owner");
+        await ctx.Stores.AddAsync(store);
+        await ctx.SaveChangesAsync();
+
+        var t1 = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            100.00m,
+            new DateTime(2024, 10, 12, 12, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "existing-raw-1"
+        );
+        var t2 = Transaction.Create(
+            store.Id,
+            TransactionType.Debit,
+            50.00m,
+            new DateTime(2024, 10, 12, 13, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "existing-raw-2"
+        );
+
+        await ctx.Transactions.AddRangeAsync(t1, t2);
+        await ctx.SaveChangesAsync();
+
+        var repo = new TransactionRepository(ctx);
+        // Mix of existing and non-existing hashes
+        var searchHashes = new[] 
+        { 
+            t1.RawLineHash,              // exists
+            "non-existent-hash-1",       // doesn't exist
+            t2.RawLineHash,              // exists
+            "non-existent-hash-2"        // doesn't exist
+        };
+
+        // Act
+        var result = await repo.GetExistingHashesAsync(searchHashes, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count);
+        Assert.Contains(t1.RawLineHash, result);
+        Assert.Contains(t2.RawLineHash, result);
+        Assert.DoesNotContain("non-existent-hash-1", result);
+        Assert.DoesNotContain("non-existent-hash-2", result);
+    }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithDuplicateHashesInInput_ReturnsUniqueHashes()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        var store = Store.Create("Loja Duplicate Input", "Owner");
+        await ctx.Stores.AddAsync(store);
+        await ctx.SaveChangesAsync();
+
+        var transaction = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            100.00m,
+            new DateTime(2024, 10, 13, 12, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "duplicate-raw"
+        );
+
+        await ctx.Transactions.AddAsync(transaction);
+        await ctx.SaveChangesAsync();
+
+        var repo = new TransactionRepository(ctx);
+        // Input contains the same hash multiple times
+        var searchHashes = new[] 
+        { 
+            transaction.RawLineHash,
+            transaction.RawLineHash,
+            transaction.RawLineHash
+        };
+
+        // Act
+        var result = await repo.GetExistingHashesAsync(searchHashes, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Contains(transaction.RawLineHash, result);
+    }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithLargeDataset_PerformsEfficiently()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        var store = Store.Create("Loja Large", "Owner");
+        await ctx.Stores.AddAsync(store);
+        await ctx.SaveChangesAsync();
+
+        // Insert 100 transactions
+        var transactions = new List<Transaction>();
+        for (var i = 0; i < 100; i++)
+        {
+            var transaction = Transaction.Create(
+                store.Id,
+                TransactionType.Credit,
+                i * 10.00m,
+                new DateTime(2024, 10, 14, 12, 0, 0, DateTimeKind.Utc).AddMinutes(i),
+                "12345678901",
+                "111122223333",
+                $"large-dataset-raw-{i}"
+            );
+            transactions.Add(transaction);
+        }
+
+        await ctx.Transactions.AddRangeAsync(transactions);
+        await ctx.SaveChangesAsync();
+
+        var repo = new TransactionRepository(ctx);
+        
+        // Search for 50 existing and 50 non-existing hashes
+        var searchHashes = new List<string>();
+        for (var i = 0; i < 50; i++)
+        {
+            searchHashes.Add(transactions[i].RawLineHash); // existing
+        }
+        for (var i = 0; i < 50; i++)
+        {
+            searchHashes.Add($"non-existent-hash-{i}"); // non-existing
+        }
+
+        // Act
+        var result = await repo.GetExistingHashesAsync(searchHashes, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(50, result.Count);
+        
+        // Verify all existing hashes are returned
+        for (var i = 0; i < 50; i++)
+        {
+            Assert.Contains(transactions[i].RawLineHash, result);
+        }
+        
+        // Verify non-existing hashes are not returned
+        for (var i = 0; i < 50; i++)
+        {
+            Assert.DoesNotContain($"non-existent-hash-{i}", result);
+        }
+    }
+
+    [Fact]
+    public async Task GetExistingHashesAsync_WithCancellationToken_RespectsCancel()
+    {
+        // Arrange
+        await using var ctx = _fixture.CreateDbContext<TransactionDbContext>();
+
+        var store = Store.Create("Loja Cancel", "Owner");
+        await ctx.Stores.AddAsync(store);
+        await ctx.SaveChangesAsync();
+
+        var transaction = Transaction.Create(
+            store.Id,
+            TransactionType.Credit,
+            100.00m,
+            new DateTime(2024, 10, 15, 12, 0, 0, DateTimeKind.Utc),
+            "12345678901",
+            "111122223333",
+            "cancel-test-raw"
+        );
+
+        await ctx.Transactions.AddAsync(transaction);
+        await ctx.SaveChangesAsync();
+
+        var repo = new TransactionRepository(ctx);
+        var searchHashes = new[] { transaction.RawLineHash };
+        var cts = new CancellationTokenSource();
+        cts.Cancel(); // Cancel immediately
+
+        // Act & Assert
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await repo.GetExistingHashesAsync(searchHashes, cts.Token)
+        );
+    }
 }
