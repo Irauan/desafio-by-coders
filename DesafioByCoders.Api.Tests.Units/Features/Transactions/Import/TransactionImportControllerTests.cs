@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using DesafioByCoders.Api.Features.Transactions;
 using DesafioByCoders.Api.Features.Transactions.Import;
 using DesafioByCoders.Api.Handlers;
 using DesafioByCoders.Api.Messages;
@@ -30,7 +29,7 @@ public class TransactionImportControllerTests
     {
         var summary = MakeSummary(("store a", 2));
         
-        var response = new TransactionImportResult(2, summary, 0, new List<ValidationError>());
+        var response = new TransactionImportResult(2, summary, 0, new List<ValidationError>(), 0);
         
         var controller = CreateControllerWithResult(response);
 
@@ -45,6 +44,7 @@ public class TransactionImportControllerTests
         Assert.Equal(200, payload.Status);
         Assert.Equal(2, payload.TotalImportedLines);
         Assert.Equal(summary, payload.ImportedSummaryPerStores);
+        Assert.Equal(0, payload.TotalLinesDuplicate);
     }
 
     [Fact]
@@ -52,7 +52,7 @@ public class TransactionImportControllerTests
     {
         var errors = MakeErrors(("CNAB_INVALID_LENGTH", "Invalid length"));
         
-        var response = new TransactionImportResult(0, new List<TransactionImportResult.ImportSummaryPerStore>(), 1, errors);
+        var response = new TransactionImportResult(0, new List<TransactionImportResult.ImportSummaryPerStore>(), 1, errors, 0);
         
         var controller = CreateControllerWithResult(response);
 
@@ -78,7 +78,7 @@ public class TransactionImportControllerTests
         
         var errors = MakeErrors(("CNAB_INVALID_TYPE", "Invalid type"));
         
-        var response = new TransactionImportResult(1, summary, 1, errors);
+        var response = new TransactionImportResult(1, summary, 1, errors, 0);
         
         var controller = CreateControllerWithResult(response);
         
@@ -100,6 +100,7 @@ public class TransactionImportControllerTests
         Assert.Equal(207, okPart.Status);
         Assert.Equal(1, okPart.TotalImportedLines);
         Assert.Equal(summary, okPart.ImportedSummaryPerStores);
+        Assert.Equal(0, okPart.TotalLinesDuplicate);
         
         Assert.Equal(207, errPart.Status);
         Assert.Equal(1, errPart.TotalInvalidLines);
