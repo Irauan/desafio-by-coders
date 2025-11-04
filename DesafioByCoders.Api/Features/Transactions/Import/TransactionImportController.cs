@@ -67,7 +67,14 @@ public class TransactionImportController : ControllerBase
 
         if (result.TotalLinesInvalid == 0)
         {
-            return Ok(new TransactionImportOkResponse(200, result.TotalLinesImported, result.ImportedSummaryPerStores));
+            return Ok(
+                new TransactionImportOkResponse(
+                    200,
+                    result.TotalLinesImported,
+                    result.ImportedSummaryPerStores,
+                    result.TotalLinesDuplicate
+                )
+            );
         }
 
         if (result.TotalLinesImported == 0)
@@ -82,7 +89,12 @@ public class TransactionImportController : ControllerBase
             (int)HttpStatusCode.MultiStatus,
             new TransactionImportMultiStatusResponse(
                 [
-                    new TransactionImportOkResponse((int)HttpStatusCode.MultiStatus, result.TotalLinesImported, result.ImportedSummaryPerStores),
+                    new TransactionImportOkResponse(
+                        (int)HttpStatusCode.MultiStatus,
+                        result.TotalLinesImported,
+                        result.ImportedSummaryPerStores,
+                        result.TotalLinesDuplicate
+                    ),
                     new TransactionImportErrorResponse((int)HttpStatusCode.MultiStatus, result.TotalLinesInvalid, result.ValidationErrors)
                 ]
             )
@@ -109,7 +121,12 @@ public class TransactionImportController : ControllerBase
         return command;
     }
 
-    public sealed record TransactionImportOkResponse(int Status, int TotalImportedLines, List<TransactionImportResult.ImportSummaryPerStore> ImportedSummaryPerStores);
+    public sealed record TransactionImportOkResponse(
+        int Status,
+        int TotalImportedLines,
+        List<TransactionImportResult.ImportSummaryPerStore> ImportedSummaryPerStores,
+        int TotalLinesDuplicate
+    );
 
     /// <summary>
     /// Error response for transaction import operations.
