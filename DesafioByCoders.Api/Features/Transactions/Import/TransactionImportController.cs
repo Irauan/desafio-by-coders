@@ -109,12 +109,6 @@ public class TransactionImportController : ControllerBase
         return command;
     }
 
-    /// <summary>
-    /// Success response for transaction import operations.
-    /// </summary>
-    /// <param name="Status">HTTP status code for the response.</param>
-    /// <param name="TotalImportedLines">Total number of imported lines.</param>
-    /// <param name="ImportedSummaryPerStores">Per-store summary of imported transactions.</param>
     public sealed record TransactionImportOkResponse(int Status, int TotalImportedLines, List<TransactionImportResult.ImportSummaryPerStore> ImportedSummaryPerStores);
 
     /// <summary>

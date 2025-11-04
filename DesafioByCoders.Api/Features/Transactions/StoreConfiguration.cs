@@ -24,7 +24,13 @@ internal sealed class StoreConfiguration : IEntityTypeConfiguration<Store>
                .HasMaxLength(100)
                .IsRequired();
 
+        // Unique index to prevent duplicate store names
         builder.HasIndex(x => x.Name)
-               .IsUnique();
+               .IsUnique()
+               .HasDatabaseName("ix_stores_name_unique");
+
+        // Non-unique index for case-insensitive search on store name
+        builder.HasIndex(x => x.Name)
+               .HasDatabaseName("ix_stores_name_search");
     }
 }

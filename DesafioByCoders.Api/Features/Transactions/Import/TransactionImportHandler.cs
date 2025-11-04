@@ -66,20 +66,6 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
     /// <item><description><b>Generate Summary:</b> Import statistics are calculated including counts per store, total imported, duplicates skipped, and validation errors.</description></item>
     /// </list>
     /// <para>
-    /// The handler uses structured logging throughout the process to track:
-    /// </para>
-    /// <list type="bullet">
-    /// <item><description>Import start with total line count</description></item>
-    /// <item><description>Parsing results and validation error counts</description></item>
-    /// <item><description>Store registration operations</description></item>
-    /// <item><description>Duplicate detection results</description></item>
-    /// <item><description>Final import statistics (total, imported, duplicates, errors, stores)</description></item>
-    /// </list>
-    /// <para>
-    /// <b>Performance Considerations:</b> The handler uses bulk operations for both store and transaction insertion
-    /// to optimize database round-trips. All transactions from a single import are processed in a single database transaction.
-    /// </para>
-    /// <para>
     /// <b>Error Handling:</b> Validation errors for individual lines don't cause the entire import to fail. 
     /// The handler processes all valid records and returns validation errors in the result for caller inspection.
     /// </para>
@@ -92,20 +78,10 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
 
         var (parsedRecords, validationErrors) = ParseCnabRecords(request.CnabRecords);
 
-        if (validationErrors.Count > 0)
-        {
-            _logger.LogWarning("Found {ValidationErrorCount} validation errors during parsing", validationErrors.Count);
-        }
-
         var (uniqueStoreNameList, cnabStores) = GetUniqueStores(parsedRecords);
 
-        _logger.LogInformation(
-            "Parsed {ParsedRecordCount} valid records from {UniqueStoreCount} unique stores",
-            parsedRecords.Count,
-            uniqueStoreNameList.Count
-        );
-
         var databaseStores = await _storeRepository.GetExistentStores(uniqueStoreNameList);
+
         var storesToInsert = GetStoresToInsert(cnabStores, databaseStores);
 
         if (storesToInsert.Count > 0)
@@ -228,7 +204,7 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
     /// with the line number for debugging purposes.
     /// </para>
     /// </remarks>
-    private static (List<CnabRecord> ParsedRecords, List<ValidationError> ValidationErrors) ParseCnabRecords(List<string> cnabRecords)
+    private (List<CnabRecord> ParsedRecords, List<ValidationError> ValidationErrors) ParseCnabRecords(List<string> cnabRecords)
     {
         var parsedRecords = new List<CnabRecord>();
         var validationErrors = new List<ValidationError>();
@@ -249,6 +225,11 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
             }
 
             parsedRecords.Add((CnabRecord)parseResult);
+        }
+        
+        if (validationErrors.Count > 0)
+        {
+            _logger.LogWarning("Found {ValidationErrorCount} validation errors during parsing", validationErrors.Count);
         }
 
         return (parsedRecords, validationErrors);
@@ -284,7 +265,7 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
     /// they will all be treated as the same store with identifier "loja a".
     /// </para>
     /// </remarks>
-    private static (HashSet<string> UniqueStoreNameList, Dictionary<string, Store> CnabStores) GetUniqueStores(List<CnabRecord> records)
+    private (HashSet<string> UniqueStoreNameList, Dictionary<string, Store> CnabStores) GetUniqueStores(List<CnabRecord> records)
     {
         var uniqueStoreNameList = new HashSet<string>();
         var cnabStores = new Dictionary<string, Store>();
@@ -296,6 +277,12 @@ internal class TransactionImportHandler : IHandler<TransactionImportCommand, Tra
             uniqueStoreNameList.Add(store.ToString());
             cnabStores.TryAdd(store.ToString(), store);
         }
+        
+        _logger.LogInformation(
+            "Parsed {ParsedRecordCount} valid records from {UniqueStoreCount} unique stores",
+            records.Count,
+            uniqueStoreNameList.Count
+        );
 
         return (uniqueStoreNameList, cnabStores);
     }

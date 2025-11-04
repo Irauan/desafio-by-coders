@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace DesafioByCoders.Api.Features.Transactions;
@@ -55,6 +55,10 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.Property(x => x.StoreId)
                .HasColumnName("store_id")
                .IsRequired();
+
+        // Index on StoreId foreign key for efficient lookups and joins
+        builder.HasIndex(x => x.StoreId)
+               .HasDatabaseName("ix_transactions_store_id");
 
         builder.HasOne(x => x.Store)
                .WithMany()
