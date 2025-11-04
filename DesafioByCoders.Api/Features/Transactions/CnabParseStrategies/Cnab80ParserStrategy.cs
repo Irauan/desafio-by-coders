@@ -64,7 +64,7 @@ internal sealed class Cnab80ParserStrategy : ICnabParserStrategy
     /// Text fields (CPF, Card, Owner, Store) are automatically trimmed of leading/trailing whitespace.
     /// </para>
     /// </remarks>
-    public Result<CnabRecord> Parse(string rawLine, int lineNumber)
+    public Result<CnabRecord> Parse(string rawLine, int lineNumber = 0)
     {
         if (string.IsNullOrWhiteSpace(rawLine))
         {
@@ -73,7 +73,7 @@ internal sealed class Cnab80ParserStrategy : ICnabParserStrategy
 
         if (rawLine.Length < 80)
         {
-            return new ValidationError("CNAB_INVALID_LENGTH", $"Line length invalid ({rawLine.Length}), expected >= 80.");
+            return new ValidationError("CNAB_INVALID_LENGTH", $"Line {lineNumber}: Line length invalid ({rawLine.Length}), expected >= 80.");
         }
 
         var typeText = rawLine[0..1];
@@ -92,14 +92,14 @@ internal sealed class Cnab80ParserStrategy : ICnabParserStrategy
                 out var typeNumber
             ))
         {
-            return new ValidationError("CNAB_INVALID_TYPE", $"Invalid transaction type value '{typeText}'.");
+            return new ValidationError("CNAB_INVALID_TYPE", $"Line {lineNumber}: Invalid transaction type value '{typeText}'.");
         }
 
         var type = (TransactionType)typeNumber;
 
         if (!Enum.IsDefined(type))
         {
-            return new ValidationError("CNAB_UNKNOWN_TYPE", $"Unknown transaction type {typeNumber}.");
+            return new ValidationError("CNAB_UNKNOWN_TYPE", $"Line {lineNumber}: Unknown transaction type {typeNumber}.");
         }
 
         if (!DateTime.TryParseExact(
@@ -110,7 +110,7 @@ internal sealed class Cnab80ParserStrategy : ICnabParserStrategy
                 out var dateOnly
             ))
         {
-            return new ValidationError("CNAB_INVALID_DATE", $"Invalid date '{dateText}'.");
+            return new ValidationError("CNAB_INVALID_DATE", $"Line {lineNumber}: Invalid date '{dateText}'.");
         }
 
         if (!TimeSpan.TryParseExact(
@@ -120,7 +120,7 @@ internal sealed class Cnab80ParserStrategy : ICnabParserStrategy
                 out var timeOfDay
             ))
         {
-            return new ValidationError("CNAB_INVALID_TIME", $"Invalid time '{timeText}'.");
+            return new ValidationError("CNAB_INVALID_TIME", $"Line {lineNumber}: Invalid time '{timeText}'.");
         }
 
         var occurredAtLocal = dateOnly.Add(timeOfDay);
@@ -132,14 +132,14 @@ internal sealed class Cnab80ParserStrategy : ICnabParserStrategy
                 out var amountCents
             ))
         {
-            return new ValidationError("CNAB_INVALID_AMOUNT", $"Invalid amount '{amountText}'.");
+            return new ValidationError("CNAB_INVALID_AMOUNT", $"Line {lineNumber}: Invalid amount '{amountText}'.");
         }
 
         var amountPositive = amountCents / 100.00m;
 
         if (amountPositive < 0)
         {
-            return new ValidationError("CNAB_NEGATIVE_AMOUNT", "Amount must be non-negative before applying sign.");
+            return new ValidationError("CNAB_NEGATIVE_AMOUNT", $"Line {lineNumber}: Amount must be non-negative before applying sign.");
         }
 
         var record = new CnabRecord(
